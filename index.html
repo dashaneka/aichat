@@ -3,325 +3,301 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chat Assistant</title>
-    
-    <!-- Tailwind CSS for styling -->
+    <title>b&b mobile - finance tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Puter.js for AI functionality -->
-    <script src="https://js.puter.com/v2/"></script>
-
-    <!-- Marked.js for rendering Markdown in AI responses -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    
-    <!-- Google Fonts: Poppins -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Custom styles to complement Tailwind */
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', sans-serif;
         }
-        /* Custom scrollbar for a cleaner look */
-        #messages-container::-webkit-scrollbar {
-            width: 8px;
+        /* simple spinner */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #3498db;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
         }
-        #messages-container::-webkit-scrollbar-track {
-            background: #1e293b;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        #messages-container::-webkit-scrollbar-thumb {
-            background: #4f46e5;
-            border-radius: 4px;
+        /* custom scrollbar for transaction lists */
+        .transaction-list::-webkit-scrollbar {
+            width: 6px;
         }
-        #messages-container::-webkit-scrollbar-thumb:hover {
-            background: #6366f1;
+        .transaction-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
         }
-        
-        /* Styles for Markdown-rendered content in AI responses */
-        .prose {
-            line-height: 1.7; /* Improved line spacing */
+        .transaction-list::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
         }
-        .prose p, .prose ul, .prose ol {
-            margin-bottom: 1.25rem;
-            letter-spacing: 0.025em; /* Improved letter spacing */
-        }
-        .prose pre {
-            background-color: #0f172a;
-            color: #e2e8f0;
-            padding: 1.25rem;
-            border-radius: 0.75rem;
-            overflow-x: auto;
-            border: 1px solid #334155;
-        }
-        .prose code {
-            background-color: #334155;
-            color: #f1f5f9;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.375rem;
-            font-size: 0.9em;
-        }
-        .prose pre code {
-             background-color: transparent;
-             padding: 0;
-             border: none;
-        }
-        .prose blockquote {
-            border-left-color: #f97316;
-            padding-left: 1rem;
-            font-style: italic;
-            color: #d1d5db;
-        }
-        .message-bubble:hover .copy-btn {
-            opacity: 1;
+        .transaction-list::-webkit-scrollbar-thumb:hover {
+            background: #555;
         }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-200">
+<body class="bg-gray-100 text-gray-800">
 
-    <div id="chat-container" class="flex flex-col h-screen w-full max-w-4xl mx-auto bg-gradient-to-br from-slate-900 to-black shadow-2xl border border-slate-700 rounded-lg overflow-hidden">
-        
-        <!-- Header -->
-        <header class="p-4 border-b border-slate-700/50 flex justify-between items-center">
-            <h1 class="text-xl font-bold text-white">AI Chat Assistant</h1>
-            <div class="flex items-center gap-2">
-                <label for="model-selector" class="text-sm font-medium text-slate-400">Model:</label>
-                <select id="model-selector" class="bg-slate-800 border border-slate-600 text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2">
-                    <option>gpt-4o</option>
-                    <option>gpt-5</option>
-                    <option selected>gpt-4.1</option>
-                    <option>o1-pro</option>
-                    <option>o3</option>
-                    <option>o3-mini</option>
-                    <option>o4-mini</option>
-                    <option>gpt-4.5-preview</option>
-                </select>
-            </div>
+    <!-- main container -->
+    <div class="container mx-auto p-4 sm:p-6 max-w-4xl">
+
+        <!-- header -->
+        <header class="text-center mb-6">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">b&b mobile</h1>
+            <p class="text-lg text-gray-600">public finance tracker</p>
         </header>
 
-        <!-- Messages Area -->
-        <main id="messages-container" class="flex-1 p-6 overflow-y-auto space-y-8">
-            <!-- Initial AI Message -->
-             <div class="flex items-start gap-4 message-bubble">
-                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center text-white font-bold">AI</div>
-                <div class="relative group bg-slate-800 rounded-lg p-4 max-w-2xl">
-                    <p>Hello! Select a model and ask me anything.</p>
-                    <button onclick="copyToClipboard(this)" class="copy-btn absolute top-2 right-2 p-1.5 bg-slate-700 rounded-md text-slate-400 hover:text-white opacity-0 transition-opacity">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                    </button>
+        <!-- main content -->
+        <main id="main-content">
+            <!-- loading spinner -->
+            <div id="loading" class="flex justify-center items-center mt-8">
+                <div class="loader"></div>
+                <p class="ml-4 text-gray-500">loading data...</p>
+            </div>
+
+            <!-- app body, hidden until data loads -->
+            <div id="app-body" class="hidden">
+                <!-- summary cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-green-100 p-4 rounded-lg shadow">
+                        <h2 class="text-lg font-semibold text-green-800">total income</h2>
+                        <p id="total-income" class="text-2xl font-bold text-green-900">npr 0</p>
+                    </div>
+                    <div class="bg-red-100 p-4 rounded-lg shadow">
+                        <h2 class="text-lg font-semibold text-red-800">total expenses</h2>
+                        <p id="total-expenses" class="text-2xl font-bold text-red-900">npr 0</p>
+                    </div>
+                    <div class="bg-blue-100 p-4 rounded-lg shadow">
+                        <h2 class="text-lg font-semibold text-blue-800">profit</h2>
+                        <p id="total-profit" class="text-2xl font-bold text-blue-900">npr 0</p>
+                    </div>
+                </div>
+
+                <!-- income and expense columns -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                    <!-- income column -->
+                    <div class="bg-white p-5 rounded-lg shadow-md">
+                        <h2 class="text-2xl font-bold mb-4 text-green-600">paisa aayo (income)</h2>
+                        <form id="income-form" class="flex flex-col sm:flex-row gap-2 mb-4">
+                            <!-- final fix: use flex-1 to fill available space -->
+                            <input type="text" id="income-desc" placeholder="e.g., phone repair" class="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-green-400 focus:outline-none" required>
+                            <input type="number" id="income-amount" placeholder="amount" class="w-full sm:w-28 p-2 border rounded-md focus:ring-2 focus:ring-green-400 focus:outline-none" required>
+                            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 font-semibold transition-colors">add</button>
+                        </form>
+                        <div id="income-list" class="transaction-list max-h-80 overflow-y-auto space-y-2">
+                            <!-- income items will be added here -->
+                        </div>
+                    </div>
+
+                    <!-- expense column -->
+                    <div class="bg-white p-5 rounded-lg shadow-md">
+                        <h2 class="text-2xl font-bold mb-4 text-red-600">paisa gayo (expenses)</h2>
+                        <form id="expense-form" class="flex flex-col sm:flex-row gap-2 mb-4">
+                            <!-- final fix: use flex-1 to fill available space -->
+                            <input type="text" id="expense-desc" placeholder="e.g., parts, rent" class="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-red-400 focus:outline-none" required>
+                            <input type="number" id="expense-amount" placeholder="amount" class="w-full sm:w-28 p-2 border rounded-md focus:ring-2 focus:ring-red-400 focus:outline-none" required>
+                            <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 font-semibold transition-colors">add</button>
+                        </form>
+                        <div id="expense-list" class="transaction-list max-h-80 overflow-y-auto space-y-2">
+                            <!-- expense items will be added here -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
-
-        <!-- Typing Indicator -->
-        <div id="typing-indicator" class="hidden p-6 pt-0">
-             <div class="flex items-center gap-4">
-                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center text-white font-bold">AI</div>
-                <div class="bg-slate-800 rounded-lg p-4 flex items-center">
-                    <div class="flex items-center justify-center gap-1.5">
-                        <span class="h-2 w-2 bg-orange-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                        <span class="h-2 w-2 bg-orange-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                        <span class="h-2 w-2 bg-orange-400 rounded-full animate-bounce"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Input Form -->
-        <footer class="p-4 border-t border-slate-700/50">
-            <form id="chat-form" class="flex items-center gap-4">
-                <input type="text" id="input-message" placeholder="Ask me anything..." class="flex-1 p-3 rounded-lg bg-slate-800 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition" autocomplete="off">
-                <button type="submit" class="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-semibold p-3 rounded-lg transition shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 focus:ring-offset-slate-900">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                </button>
-            </form>
-        </footer>
     </div>
 
-    <script>
-        // DOM Elements
-        const chatForm = document.getElementById('chat-form');
-        const inputMessage = document.getElementById('input-message');
-        const messagesContainer = document.getElementById('messages-container');
-        const typingIndicator = document.getElementById('typing-indicator');
-        const modelSelector = document.getElementById('model-selector');
+    <!-- delete confirmation modal -->
+    <div id="delete-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4">
+        <div class="bg-white rounded-lg p-6 shadow-xl max-w-sm w-full">
+            <h3 class="text-lg font-bold mb-4">confirm deletion</h3>
+            <p class="text-gray-600 mb-6">are you sure you want to delete this entry? this action cannot be undone.</p>
+            <div class="flex justify-end gap-4">
+                <button id="cancel-delete" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">cancel</button>
+                <button id="confirm-delete" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">delete</button>
+            </div>
+        </div>
+    </div>
 
-        // Conversation history
-        const messages = [{
-            role: 'assistant',
-            content: 'Hello! Select a model and ask me anything.'
-        }];
+    <!-- firebase sdk -->
+    <script type="module">
+        // --- firebase configuration ---
+        // this is the configuration you provided.
+        const firebaseConfig = {
+            apiKey: "AIzaSyAfMU35NJj9Iq59H6OtXC0YDh2gPxXbZPk",
+            authDomain: "bb-mobilee.firebaseapp.com",
+            projectId: "bb-mobilee",
+            storageBucket: "bb-mobilee.appspot.com",
+            messagingSenderId: "1093289169212",
+            appId: "1:1093289169212:web:648f17a21e72ea76bb8e39",
+            measurementId: "G-FE6TXSBX42"
+        };
+        
+        // --- firebase imports ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, doc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Event Listeners ---
-        chatForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            sendMessage();
+        // --- firebase initialization ---
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- global variables ---
+        let transactionToDeleteId = null;
+        
+        // --- dom elements ---
+        const loadingEl = document.getElementById('loading');
+        const appBodyEl = document.getElementById('app-body');
+        const incomeForm = document.getElementById('income-form');
+        const expenseForm = document.getElementById('expense-form');
+        const incomeList = document.getElementById('income-list');
+        const expenseList = document.getElementById('expense-list');
+        const totalIncomeEl = document.getElementById('total-income');
+        const totalExpensesEl = document.getElementById('total-expenses');
+        const totalProfitEl = document.getElementById('total-profit');
+        const deleteModal = document.getElementById('delete-modal');
+        const cancelDeleteBtn = document.getElementById('cancel-delete');
+        const confirmDeleteBtn = document.getElementById('confirm-delete');
+
+        // --- firestore data listener ---
+        // this path is now public, so anyone can read/write.
+        const publicTransactionsPath = 'public_transactions';
+        const q = query(collection(db, publicTransactionsPath));
+
+        onSnapshot(q, (querySnapshot) => {
+            const transactions = [];
+            querySnapshot.forEach((doc) => {
+                transactions.push({ id: doc.id, ...doc.data() });
+            });
+            // sort by timestamp in descending order (newest first)
+            transactions.sort((a, b) => (b.timestamp?.toDate() || 0) - (a.timestamp?.toDate() || 0));
+            renderTransactions(transactions);
+            
+            // hide loader and show app body once data is loaded
+            loadingEl.style.display = 'none';
+            appBodyEl.classList.remove('hidden');
+
+        }, (error) => {
+            console.error("error fetching transactions:", error);
+            loadingEl.textContent = "could not fetch data. check console for errors.";
         });
 
-        // --- Functions ---
+        // --- render ui ---
+        function renderTransactions(transactions) {
+            incomeList.innerHTML = '';
+            expenseList.innerHTML = '';
+            let totalIncome = 0;
+            let totalExpenses = 0;
 
-        /**
-         * Handles sending a message from the user input.
-         */
-        function sendMessage() {
-            const messageText = inputMessage.value.trim();
-            if (!messageText) return;
-
-            addMessageToUI(messageText, 'user');
-            messages.push({ content: messageText, role: 'user' });
-
-            inputMessage.value = '';
-            inputMessage.focus();
-            
-            showTypingIndicator(true);
-            getAIResponse();
-        }
-
-        /**
-         * Fetches a response from the Puter.js AI using the selected model.
-         */
-        async function getAIResponse() {
-            const selectedModel = modelSelector.value;
-            try {
-                const response = await puter.ai.chat(messages, { model: selectedModel });
-                showTypingIndicator(false);
-
-                if (response && response.message) {
-                    messages.push(response.message);
-                    addMessageToUI(response.message.content, 'assistant');
-                } else {
-                    throw new Error("Invalid response from AI.");
+            transactions.forEach(t => {
+                if (t.type === 'income') {
+                    totalIncome += t.amount;
+                    incomeList.innerHTML += createTransactionItem(t, 'green');
+                } else if (t.type === 'expense') {
+                    totalExpenses += t.amount;
+                    expenseList.innerHTML += createTransactionItem(t, 'red');
                 }
-            } catch (error) {
-                console.error("AI response error:", error);
-                showTypingIndicator(false);
-                addMessageToUI(`Sorry, I encountered an error with the ${selectedModel} model. Please try another model or try again.`, 'error');
-            }
-        }
-        
-        /**
-         * Adds a message bubble to the chat UI.
-         * @param {string} text - The message content.
-         * @param {'user' | 'assistant' | 'error'} sender - Who sent the message.
-         */
-        function addMessageToUI(text, sender) {
-            const messageWrapper = document.createElement('div');
-            messageWrapper.className = 'message-bubble';
+            });
             
-            if (sender === 'user') {
-                messageWrapper.classList.add('flex', 'items-start', 'gap-4', 'justify-end');
-                messageWrapper.innerHTML = `
-                    <div class="relative group bg-indigo-600 text-white rounded-lg p-4 max-w-2xl">
-                        <p>${text}</p>
-                        <button onclick="copyToClipboard(this)" class="copy-btn absolute top-2 right-2 p-1.5 bg-indigo-500 rounded-md text-indigo-200 hover:text-white opacity-0 transition-opacity">
-                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                        </button>
+            const profit = totalIncome - totalExpenses;
+            totalIncomeEl.textContent = `npr ${totalIncome.toLocaleString()}`;
+            totalExpensesEl.textContent = `npr ${totalExpenses.toLocaleString()}`;
+            totalProfitEl.textContent = `npr ${profit.toLocaleString()}`;
+
+            totalProfitEl.classList.remove('text-green-900', 'text-red-900', 'text-blue-900');
+            if (profit > 0) totalProfitEl.classList.add('text-green-900');
+            else if (profit < 0) totalProfitEl.classList.add('text-red-900');
+            else totalProfitEl.classList.add('text-blue-900');
+        }
+
+        // --- create html for a single transaction item ---
+        function createTransactionItem(transaction, color) {
+            const date = transaction.timestamp ? transaction.timestamp.toDate().toLocaleDateString('en-np') : 'just now';
+            return `
+                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-md border-l-4 border-${color}-400">
+                    <div>
+                        <p class="font-medium capitalize">${transaction.description}</p>
+                        <p class="text-xs text-gray-500">${date}</p>
                     </div>
-                    <div class="flex-shrink-0 h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center text-orange-400 font-bold">RJ</div>
-                `;
-            } else if (sender === 'assistant') {
-                messageWrapper.classList.add('flex', 'items-start', 'gap-4');
-                messageWrapper.innerHTML = `
-                    <div class="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center text-white font-bold">AI</div>
-                    <div class="relative group bg-slate-800 rounded-lg p-4 max-w-2xl">
-                        <div class="prose prose-slate dark:prose-invert"></div>
-                        <button onclick="copyToClipboard(this)" class="copy-btn absolute top-2 right-2 p-1.5 bg-slate-700 rounded-md text-slate-400 hover:text-white opacity-0 transition-opacity">
-                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                        </button>
+                    <div class="flex items-center gap-2 sm:gap-4">
+                       <p class="font-bold text-md sm:text-lg">npr ${transaction.amount.toLocaleString()}</p>
+                       <button data-id="${transaction.id}" class="delete-btn text-gray-400 hover:text-red-600 text-2xl font-bold transition-colors">&times;</button>
                     </div>
-                `;
-                messagesContainer.appendChild(messageWrapper);
-                const contentDiv = messageWrapper.querySelector('.prose');
-                typeWriter(contentDiv, text);
-            } else if (sender === 'error') {
-                 messageWrapper.classList.add('flex', 'items-start', 'gap-4');
-                 messageWrapper.innerHTML = `
-                    <div class="flex-shrink-0 h-10 w-10 rounded-full bg-red-500 flex items-center justify-center text-white font-bold">!</div>
-                    <div class="bg-red-900/50 border border-red-700 text-red-300 rounded-lg p-4 max-w-2xl">
-                        <p>${text}</p>
-                    </div>
-                `;
-            }
-
-            if (sender !== 'assistant') {
-                messagesContainer.appendChild(messageWrapper);
-            }
-            
-            scrollToBottom();
+                </div>
+            `;
         }
 
-        /**
-         * Simulates a typewriter effect for the AI's response.
-         * @param {HTMLElement} element - The element to type into.
-         * @param {string} text - The text to type.
-         */
-        function typeWriter(element, text) {
-            const finalHtml = marked.parse(text);
-            element.innerHTML = finalHtml;
-            
-            // A simple fade-in effect for the new message
-            element.style.opacity = '0';
-            let opacity = 0;
-            const interval = setInterval(() => {
-                opacity += 0.1;
-                element.style.opacity = opacity;
-                if (opacity >= 1) clearInterval(interval);
-            }, 20);
-
-            scrollToBottom();
-        }
-
-        /**
-         * Shows or hides the typing indicator.
-         * @param {boolean} show - Whether to show or hide the indicator.
-         */
-        function showTypingIndicator(show) {
-            typingIndicator.classList.toggle('hidden', !show);
-            if(show) scrollToBottom();
-        }
-
-        /**
-         * Scrolls the message container to the very bottom.
-         */
-        function scrollToBottom() {
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-
-        /**
-         * Copies the text content of a message to the clipboard.
-         * @param {HTMLElement} buttonElement - The copy button that was clicked.
-         */
-        function copyToClipboard(buttonElement) {
-            // Find the content container (p or .prose) which is a sibling of the button.
-            const messageContentElement = buttonElement.parentElement.querySelector('p, .prose');
-            if (!messageContentElement) return;
-
-            const textToCopy = messageContentElement.innerText;
-            
-            const textarea = document.createElement('textarea');
-            textarea.value = textToCopy;
-            textarea.style.position = 'absolute';
-            textarea.style.left = '-9999px';
-            textarea.setAttribute('readonly', '');
-
-            document.body.appendChild(textarea);
-            textarea.select();
-
+        // --- add transaction function ---
+        async function addTransaction(type, description, amount) {
             try {
-                document.execCommand('copy');
-                // Provide visual feedback
-                const originalIcon = buttonElement.innerHTML;
-                buttonElement.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-green-400"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-                setTimeout(() => {
-                    buttonElement.innerHTML = originalIcon;
-                }, 1500);
-            } catch (err) {
-                console.error('Failed to copy text: ', err);
-            } finally {
-                document.body.removeChild(textarea);
+                await addDoc(collection(db, publicTransactionsPath), {
+                    type: type,
+                    description: description,
+                    amount: Number(amount),
+                    timestamp: serverTimestamp()
+                });
+            } catch (error) {
+                console.error("error adding document: ", error);
+                alert("could not save transaction. please try again.");
             }
         }
+
+        // --- delete transaction function ---
+        async function deleteTransaction(id) {
+            try {
+                await deleteDoc(doc(db, publicTransactionsPath, id));
+            } catch (error) {
+                console.error("error deleting document: ", error);
+                alert("could not delete transaction.");
+            }
+        }
+
+        // --- event listeners ---
+        incomeForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const desc = document.getElementById('income-desc').value;
+            const amount = document.getElementById('income-amount').value;
+            if (desc && amount > 0) {
+                addTransaction('income', desc, amount);
+                incomeForm.reset();
+            }
+        });
+
+        expenseForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const desc = document.getElementById('expense-desc').value;
+            const amount = document.getElementById('expense-amount').value;
+            if (desc && amount > 0) {
+                addTransaction('expense', desc, amount);
+                expenseForm.reset();
+            }
+        });
+
+        // --- modal event listeners ---
+        // event delegation for delete buttons
+        document.body.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-btn')) {
+                transactionToDeleteId = e.target.getAttribute('data-id');
+                deleteModal.classList.remove('hidden');
+            }
+        });
+
+        cancelDeleteBtn.addEventListener('click', () => {
+            transactionToDeleteId = null;
+            deleteModal.classList.add('hidden');
+        });
+
+        confirmDeleteBtn.addEventListener('click', () => {
+            if (transactionToDeleteId) {
+                deleteTransaction(transactionToDeleteId);
+            }
+            transactionToDeleteId = null;
+            deleteModal.classList.add('hidden');
+        });
 
     </script>
 </body>
